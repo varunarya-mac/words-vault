@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WordVault Icon Generator</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    h1 { margin-top: 0; }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    button {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 10px 5px;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    .instructions {
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 WordVault Icon Generator</h1>
+    <p>Generate PWA icons for your WordVault app</p>
+
+    <canvas id="icon192" width="192" height="192"></canvas>
+    <button onclick="downloadIcon(192)">Download 192x192 PNG</button>
+
+    <canvas id="icon512" width="512" height="512"></canvas>
+    <button onclick="downloadIcon(512)">Download 512x512 PNG</button>
+
+    <canvas id="iconApple" width="180" height="180"></canvas>
+    <button onclick="downloadIcon(180, 'apple-touch-icon')">Download Apple Touch Icon</button>
+
+    <div class="instructions">
+      <h3>Instructions:</h3>
+      <ol>
+        <li>Click each download button to save the icons</li>
+        <li>Rename the downloaded files:
+          <ul>
+            <li>First download → <code>pwa-192x192.png</code></li>
+            <li>Second download → <code>pwa-512x512.png</code></li>
+            <li>Third download → <code>apple-touch-icon.png</code></li>
+          </ul>
+        </li>
+        <li>Place all three files in the <code>public/</code> folder</li>
+        <li>Run <code>npm run build</code> to rebuild with icons</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    function drawIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+      const cornerRadius = size * 0.2;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, size, size);
+
+      // Draw rounded rectangle with gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#8b5cf6');
+      gradient.addColorStop(1, '#6366f1');
+
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, cornerRadius);
+      ctx.fill();
+
+      // Draw "WV" text
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${size * 0.47}px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('WV', size / 2, size / 2 + size * 0.05);
+    }
+
+    function downloadIcon(size, name = null) {
+      const canvas = document.getElementById(name === 'apple-touch-icon' ? 'iconApple' : `icon${size}`);
+      const link = document.createElement('a');
+      link.download = name || `icon-${size}x${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Polyfill for roundRect (for older browsers)
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.beginPath();
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+      }
+    }
+
+    // Draw all icons on page load
+    window.onload = function() {
+      drawIcon(document.getElementById('icon192'));
+      drawIcon(document.getElementById('icon512'));
+      drawIcon(document.getElementById('iconApple'));
+    };
+  </script>
+</body>
+</html>
