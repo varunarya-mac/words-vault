@@ -5,15 +5,24 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Helper function to get current authenticated user
+async function getCurrentUser() {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) throw new Error('Not authenticated')
+  return user
+}
+
 // ============================================
 // WORDS OPERATIONS
 // ============================================
 
 export async function getAllWords() {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('words')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -26,10 +35,12 @@ export async function getAllWords() {
 
 export async function getWordById(id) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('words')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single()
 
     if (error) throw error
@@ -42,6 +53,7 @@ export async function getWordById(id) {
 
 export async function createWord(wordData) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('words')
       .insert([{
@@ -49,7 +61,8 @@ export async function createWord(wordData) {
         meaning: wordData.meaning,
         examples: wordData.examples || [],
         tags: wordData.tags || [],
-        simplified_meaning: wordData.simplified_meaning || null
+        simplified_meaning: wordData.simplified_meaning || null,
+        user_id: user.id
       }])
       .select()
       .single()
@@ -64,10 +77,12 @@ export async function createWord(wordData) {
 
 export async function updateWord(id, updates) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('words')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -81,10 +96,12 @@ export async function updateWord(id, updates) {
 
 export async function deleteWord(id) {
   try {
+    const user = await getCurrentUser()
     const { error } = await supabase
       .from('words')
       .delete()
       .eq('id', id)
+      .eq('user_id', user.id)
 
     if (error) throw error
 
@@ -94,6 +111,7 @@ export async function deleteWord(id) {
       .delete()
       .eq('item_type', 'word')
       .eq('item_id', id)
+      .eq('user_id', user.id)
 
     return true
   } catch (error) {
@@ -108,9 +126,11 @@ export async function deleteWord(id) {
 
 export async function getAllIdioms() {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('idioms')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -123,10 +143,12 @@ export async function getAllIdioms() {
 
 export async function getIdiomById(id) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('idioms')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single()
 
     if (error) throw error
@@ -139,6 +161,7 @@ export async function getIdiomById(id) {
 
 export async function createIdiom(idiomData) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('idioms')
       .insert([{
@@ -147,7 +170,8 @@ export async function createIdiom(idiomData) {
         origin: idiomData.origin || null,
         examples: idiomData.examples || [],
         tags: idiomData.tags || [],
-        simplified_meaning: idiomData.simplified_meaning || null
+        simplified_meaning: idiomData.simplified_meaning || null,
+        user_id: user.id
       }])
       .select()
       .single()
@@ -162,10 +186,12 @@ export async function createIdiom(idiomData) {
 
 export async function updateIdiom(id, updates) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('idioms')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -179,10 +205,12 @@ export async function updateIdiom(id, updates) {
 
 export async function deleteIdiom(id) {
   try {
+    const user = await getCurrentUser()
     const { error } = await supabase
       .from('idioms')
       .delete()
       .eq('id', id)
+      .eq('user_id', user.id)
 
     if (error) throw error
 
@@ -192,6 +220,7 @@ export async function deleteIdiom(id) {
       .delete()
       .eq('item_type', 'idiom')
       .eq('item_id', id)
+      .eq('user_id', user.id)
 
     return true
   } catch (error) {
@@ -206,9 +235,11 @@ export async function deleteIdiom(id) {
 
 export async function getAllTags() {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('tags')
       .select('*')
+      .eq('user_id', user.id)
       .order('name', { ascending: true })
 
     if (error) throw error
@@ -221,9 +252,10 @@ export async function getAllTags() {
 
 export async function createTag(name, color) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('tags')
-      .insert([{ name, color }])
+      .insert([{ name, color, user_id: user.id }])
       .select()
       .single()
 
@@ -237,10 +269,12 @@ export async function createTag(name, color) {
 
 export async function deleteTag(id) {
   try {
+    const user = await getCurrentUser()
     const { error } = await supabase
       .from('tags')
       .delete()
       .eq('id', id)
+      .eq('user_id', user.id)
 
     if (error) throw error
     return true
@@ -256,13 +290,15 @@ export async function deleteTag(id) {
 
 export async function saveQuizResult(quizData) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('quiz_history')
       .insert([{
         type: quizData.type,
         score: quizData.score,
         total_questions: quizData.total_questions,
-        completed_at: quizData.completed_at || new Date().toISOString()
+        completed_at: quizData.completed_at || new Date().toISOString(),
+        user_id: user.id
       }])
       .select()
       .single()
@@ -277,9 +313,11 @@ export async function saveQuizResult(quizData) {
 
 export async function getQuizHistory(limit = 10) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('quiz_history')
       .select('*')
+      .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
       .limit(limit)
 
@@ -297,10 +335,12 @@ export async function getQuizHistory(limit = 10) {
 
 export async function getItemsDueForReview() {
   try {
+    const user = await getCurrentUser()
     const now = new Date().toISOString()
     const { data, error } = await supabase
       .from('review_schedule')
       .select('*')
+      .eq('user_id', user.id)
       .lte('next_review_at', now)
       .order('next_review_at', { ascending: true })
 
@@ -314,12 +354,14 @@ export async function getItemsDueForReview() {
 
 export async function createReviewSchedule(itemType, itemId) {
   try {
+    const user = await getCurrentUser()
     // Check if schedule already exists
     const { data: existing } = await supabase
       .from('review_schedule')
       .select('*')
       .eq('item_type', itemType)
       .eq('item_id', itemId)
+      .eq('user_id', user.id)
       .single()
 
     if (existing) {
@@ -335,7 +377,8 @@ export async function createReviewSchedule(itemType, itemId) {
         easiness_factor: 2.5,
         repetition_count: 0,
         interval_days: 1,
-        next_review_at: new Date().toISOString()
+        next_review_at: new Date().toISOString(),
+        user_id: user.id
       }])
       .select()
       .single()
@@ -350,6 +393,7 @@ export async function createReviewSchedule(itemType, itemId) {
 
 export async function updateReviewSchedule(id, scheduleData) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('review_schedule')
       .update({
@@ -360,6 +404,7 @@ export async function updateReviewSchedule(id, scheduleData) {
         last_reviewed_at: new Date().toISOString()
       })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -373,11 +418,13 @@ export async function updateReviewSchedule(id, scheduleData) {
 
 export async function getReviewScheduleForItem(itemType, itemId) {
   try {
+    const user = await getCurrentUser()
     const { data, error } = await supabase
       .from('review_schedule')
       .select('*')
       .eq('item_type', itemType)
       .eq('item_id', itemId)
+      .eq('user_id', user.id)
       .single()
 
     if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows found
@@ -394,12 +441,14 @@ export async function getReviewScheduleForItem(itemType, itemId) {
 
 export async function getRandomItems(count = 10, type = 'both') {
   try {
+    const user = await getCurrentUser()
     let items = []
 
     if (type === 'words' || type === 'both') {
       const { data: words } = await supabase
         .from('words')
         .select('*')
+        .eq('user_id', user.id)
       if (words) items = [...items, ...words.map(w => ({ ...w, type: 'word' }))]
     }
 
@@ -407,6 +456,7 @@ export async function getRandomItems(count = 10, type = 'both') {
       const { data: idioms } = await supabase
         .from('idioms')
         .select('*')
+        .eq('user_id', user.id)
       if (idioms) items = [...items, ...idioms.map(i => ({ ...i, type: 'idiom' }))]
     }
 
@@ -421,9 +471,10 @@ export async function getRandomItems(count = 10, type = 'both') {
 
 export async function getStats() {
   try {
+    const user = await getCurrentUser()
     const [wordsResult, idiomsResult, dueResult, quizResult] = await Promise.all([
-      supabase.from('words').select('id', { count: 'exact', head: true }),
-      supabase.from('idioms').select('id', { count: 'exact', head: true }),
+      supabase.from('words').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+      supabase.from('idioms').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       getItemsDueForReview(),
       getQuizHistory(5)
     ])

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getStats } from '../services/supabase'
 import { getQuizTypeName, percentage } from '../utils/helpers'
+import { useAuth } from '../contexts/AuthContext'
 import Spinner from '../components/Spinner'
 
 export default function Home({ showToast }) {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { signOut } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchStats()
@@ -25,6 +28,15 @@ export default function Home({ showToast }) {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      navigate('/login')
+    } catch (error) {
+      showToast('Failed to log out', 'error')
+    }
+  }
+
   if (loading) return <Spinner fullScreen />
 
   return (
@@ -32,12 +44,22 @@ export default function Home({ showToast }) {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-display font-bold text-gray-900 mb-2">
-            WordVault
-          </h1>
-          <p className="text-gray-600">
-            Your AI-powered vocabulary companion
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-display font-bold text-gray-900 mb-2">
+                WordVault
+              </h1>
+              <p className="text-gray-600">
+                Your AI-powered vocabulary companion
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="btn-ghost text-sm text-gray-600 hover:text-gray-900"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Stats Grid */}

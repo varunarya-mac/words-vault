@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 
 // Components
 import Navbar from './components/Navbar'
 import Toast from './components/Toast'
+import ProtectedRoute from './components/ProtectedRoute'
 
 // Pages
 import Home from './pages/Home'
+import Login from './pages/Login'
 import WordsLibrary from './pages/WordsLibrary'
 import IdiomsLibrary from './pages/IdiomsLibrary'
 import AddNew from './pages/AddNew'
@@ -18,8 +20,9 @@ import QuizSession from './pages/QuizSession'
 import Review from './pages/Review'
 import TagsManager from './pages/TagsManager'
 
-function App() {
+function AppContent() {
   const [toast, setToast] = useState(null)
+  const location = useLocation()
 
   // Global toast function that can be passed to all pages
   const showToast = (message, type = 'success') => {
@@ -28,29 +31,42 @@ function App() {
     setTimeout(() => setToast(null), 3000)
   }
 
+  // Hide navbar on login page
+  const showNavbar = location.pathname !== '/login'
+
+  return (
+    <div className="min-h-screen pb-20">
+      <Routes>
+        {/* Public route */}
+        <Route path="/login" element={<Login showToast={showToast} />} />
+
+        {/* Protected routes */}
+        <Route path="/" element={<ProtectedRoute><Home showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/words" element={<ProtectedRoute><WordsLibrary showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/idioms" element={<ProtectedRoute><IdiomsLibrary showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/add" element={<ProtectedRoute><AddNew showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/word/:id" element={<ProtectedRoute><WordDetail showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/idiom/:id" element={<ProtectedRoute><IdiomDetail showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/find" element={<ProtectedRoute><FindBySituation showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/quiz" element={<ProtectedRoute><Quiz showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/quiz/:type" element={<ProtectedRoute><QuizSession showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/review" element={<ProtectedRoute><Review showToast={showToast} /></ProtectedRoute>} />
+        <Route path="/tags" element={<ProtectedRoute><TagsManager showToast={showToast} /></ProtectedRoute>} />
+      </Routes>
+
+      {/* Global Navbar - hidden on login page */}
+      {showNavbar && <Navbar />}
+
+      {/* Global Toast Notification */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    </div>
+  )
+}
+
+function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen pb-20">
-        <Routes>
-          <Route path="/" element={<Home showToast={showToast} />} />
-          <Route path="/words" element={<WordsLibrary showToast={showToast} />} />
-          <Route path="/idioms" element={<IdiomsLibrary showToast={showToast} />} />
-          <Route path="/add" element={<AddNew showToast={showToast} />} />
-          <Route path="/word/:id" element={<WordDetail showToast={showToast} />} />
-          <Route path="/idiom/:id" element={<IdiomDetail showToast={showToast} />} />
-          <Route path="/find" element={<FindBySituation showToast={showToast} />} />
-          <Route path="/quiz" element={<Quiz showToast={showToast} />} />
-          <Route path="/quiz/:type" element={<QuizSession showToast={showToast} />} />
-          <Route path="/review" element={<Review showToast={showToast} />} />
-          <Route path="/tags" element={<TagsManager showToast={showToast} />} />
-        </Routes>
-
-        {/* Global Navbar - appears on all pages */}
-        <Navbar />
-
-        {/* Global Toast Notification */}
-        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      </div>
+      <AppContent />
     </BrowserRouter>
   )
 }
