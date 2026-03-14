@@ -143,19 +143,20 @@ Provide a simpler, more accessible explanation (2-3 sentences max) that a beginn
 
 export async function findBySituation(situationDescription) {
   try {
-    const systemPrompt = 'You are a helpful vocabulary assistant. Suggest relevant words and idioms for specific situations. Return ONLY valid JSON without markdown formatting.'
+    const systemPrompt = 'You are a helpful English vocabulary assistant. The user may describe situations in Hindi, English, or Hinglish. Always suggest ENGLISH words and idioms only. Return ONLY valid JSON without markdown formatting.'
 
     const userPrompt = `For the situation: "${situationDescription}"
 
-Suggest 5 relevant words and 3 relevant idioms. Return a JSON object with:
+Suggest 5 relevant ENGLISH words and 3 relevant ENGLISH idioms that fit this situation.
+The user input may be in Hindi, English, or Hinglish - but your response must contain only English vocabulary.
+
+Return a JSON object with:
 {
   "words": [
-    {"word": "word1", "reason": "why it fits this situation"},
-    {"word": "word2", "reason": "why it fits"}
+    {"word": "english_word", "reason": "explanation in English why it fits"}
   ],
   "idioms": [
-    {"idiom": "idiom1", "reason": "why it fits"},
-    {"idiom": "idiom2", "reason": "why it fits"}
+    {"idiom": "english_idiom", "reason": "explanation in English why it fits"}
   ]
 }
 
@@ -248,6 +249,32 @@ The situation should clearly fit "${text}" best. Distractors should be related b
   } catch (error) {
     console.error('Error generating situation match:', error)
     throw new Error('Failed to generate quiz question. Please try again.')
+  }
+}
+
+// ============================================
+// VOICE TRANSCRIPTION
+// ============================================
+
+export async function transcribeAudio(audioBlob, mimeType = 'audio/webm') {
+  try {
+    // Get file extension from MIME type
+    const extension = mimeType.includes('mp4') ? 'mp4'
+                    : mimeType.includes('mpeg') ? 'mp3'
+                    : 'webm'
+
+    const file = new File([audioBlob], `recording.${extension}`, { type: mimeType })
+
+    const transcription = await groq.audio.transcriptions.create({
+      file: file,
+      model: 'whisper-large-v3',
+      // No language param → auto-detect Hindi, English, or Hinglish
+    })
+
+    return transcription.text
+  } catch (error) {
+    console.error('Error transcribing audio:', error)
+    throw new Error('Failed to transcribe audio. Please try again.')
   }
 }
 

@@ -3,6 +3,7 @@ import { findBySituation } from '../services/openai'
 import { createWord, createIdiom } from '../services/supabase'
 import Spinner from '../components/Spinner'
 import EmptyState from '../components/EmptyState'
+import VoiceButton from '../components/VoiceButton'
 
 export default function FindBySituation({ showToast }) {
   const [situation, setSituation] = useState('')
@@ -16,21 +17,31 @@ export default function FindBySituation({ showToast }) {
     "Talking about a surprising event"
   ]
 
-  const handleSearch = async () => {
-    if (!situation.trim()) {
+  const handleSearch = async (searchText = situation) => {
+    if (!searchText.trim()) {
       showToast('Please describe a situation', 'error')
       return
     }
 
     try {
       setLoading(true)
-      const aiResults = await findBySituation(situation)
+      const aiResults = await findBySituation(searchText)
       setResults(aiResults)
     } catch (error) {
       showToast('Failed to find suggestions', 'error')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleVoiceTranscription = (text) => {
+    setSituation(text)
+    // Auto-search after voice transcription
+    handleSearch(text)
+  }
+
+  const handleVoiceError = (errorMessage) => {
+    showToast(errorMessage, 'error')
   }
 
   const handleSaveWord = async (wordData) => {
@@ -70,22 +81,31 @@ export default function FindBySituation({ showToast }) {
             Find by Situation
           </h1>
           <p className="text-gray-600">
-            Describe a situation and AI will suggest relevant words and idioms
+            Describe a situation and AI will suggest relevant words and idioms. You can type or speak in Hindi, English, or Hinglish.
           </p>
         </div>
 
         {/* Search Form */}
         <div className="glass-card p-6 mb-6">
-          <textarea
-            value={situation}
-            onChange={(e) => setSituation(e.target.value)}
-            placeholder="Describe the situation where you want to use certain words or idioms..."
-            className="textarea-field h-32 mb-4"
-            disabled={loading}
-          />
+          <div className="relative mb-4">
+            <textarea
+              value={situation}
+              onChange={(e) => setSituation(e.target.value)}
+              placeholder="Describe the situation where you want to use certain words or idioms... (Type or hold mic to speak in Hindi/English)"
+              className="textarea-field h-32 pr-16"
+              disabled={loading}
+            />
+            <div className="absolute right-3 bottom-3">
+              <VoiceButton
+                onTranscription={handleVoiceTranscription}
+                onError={handleVoiceError}
+                disabled={loading}
+              />
+            </div>
+          </div>
 
           <button
-            onClick={handleSearch}
+            onClick={() => handleSearch()}
             disabled={loading || !situation.trim()}
             className="btn-primary w-full disabled:opacity-50"
           >
