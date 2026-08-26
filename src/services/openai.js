@@ -12,7 +12,7 @@ async function generateWithGroq(systemPrompt, userPrompt, temperature = 0.7) {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    model: 'llama-3.3-70b-versatile',
+    model: 'openai/gpt-oss-120b',
     temperature: temperature,
     max_completion_tokens: 2048
   })
